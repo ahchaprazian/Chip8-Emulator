@@ -13,9 +13,9 @@ int main(int argc, char* argv[]) {
 
     Chip8 chip8Emulator = Chip8();
     chip8Emulator.loadROM(argv[1]);
-    chip8Emulator.decode();
-    chip8Emulator.execute();
-    chip8Emulator.fetch();
+    uint16_t opcode = chip8Emulator.fetch();
+    chip8Emulator.decodeAndExecute(opcode);
+    
 
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {

@@ -17,8 +17,8 @@ public:
     
     void loadROM(const std::string& romFile);
     uint16_t fetch();
-    void decode();
-    void execute();
+    void decodeAndExecute(uint16_t opcode);
+    //void execute();
 
 private:
     uint16_t mem[4096];            // 4kilo memory

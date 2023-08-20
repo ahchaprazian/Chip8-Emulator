@@ -63,9 +63,62 @@ uint16_t Chip8::fetch() {
 
     return opcode;
 }
-void Chip8::decode() {
-    std::cout << "DECODE STUB BOYO\n";
-}
-void Chip8::execute() {
-    std::cout << "EXECUTE STUB LADDY\n";
+
+void Chip8::decodeAndExecute(uint16_t opcode) {
+    //decode first four bits to get opcode type
+    uint16_t opType = (opcode & 0xF000) >> 12;
+
+    switch(opType) {
+        case 0x0:
+            // TODO codes 00E0, 00EE, 0nnn
+            break;
+        case 0x1:
+            // TODO 1nnn
+            break;
+        case 0x2:
+            // TODO 2nnn
+            break;
+        case 0x3:
+            // TODO 3xkk
+            break;
+        case 0x4:
+            // TODO 4xkk
+            break;
+        case 0x5:
+            // TODO 5xy0
+            break;
+        case 0x6:
+            // TODO 6xkk
+            break;
+        case 0x7:
+            // TODO 7xkk
+            break;
+        case 0x8:
+            // TODO 8xy0, 8xy1, 8xy2, 8xy3, 8xy4, 8xy5, 8xy6, 8xy7, 8xyE
+            break;
+        case 0x9:
+            // TODO 9xy0
+            break;
+        case 0xA:
+            // TODO Annn
+            break;
+        case 0xB:
+            // TODO Bnnn
+            break;
+        case 0xC:
+            // TODO Cxkk
+            break;
+        case 0xD:
+            // TODO Dxyn
+            break;
+        case 0xE:
+            // TODO Ex9E, ExA1
+            break;
+        case 0xF:
+            // TODO Fx07, Fx0A, Fx15, Fx18, Fx1E, Fx29, Fx33, Fx55, Fx65
+            break;
+
+        default:
+            break;
+    }
 }
