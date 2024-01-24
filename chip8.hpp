@@ -23,14 +23,14 @@ public:
 private:
     uint8_t registers[16] {};
     uint8_t memory[4096] {};
-    uint16_t index{};
-    uint16_t pc {};             // program counter
-    uint16_t stack[16] {};
-    uint8_t sp{};               // stack pointer
+    uint16_t index{};           // Index register
+    uint16_t programCounter {};             // program counter
+    uint16_t stack[16] {};      // Stack
+    uint8_t stackPointer{};               // stack pointer
     uint8_t delayTimer {};
     uint8_t soundTimer {};
-    uint8_t keypad[16] {};
-    uint32_t video[64 * 32] {};
+    uint8_t keypad[16] {};      
+    uint32_t video[64 * 32] {}; // graphics
     uint16_t opcode;
 
     std::default_random_engine randGen;

@@ -32,10 +32,29 @@ uint8_t font[FONTSET_SIZE] = {
 Chip8::Chip8() : randGen(std::chrono::system_clock::now().time_since_epoch().count())
 { 
     // init program counter
-    this->pc = START_ADDRESS;
+    this->programCounter = START_ADDRESS;
+    this->index = 0;
+    this->delayTimer = 0;
+    this->soundTimer = 0;
+    this->opcode = 0;
+    this->stackPointer = 0;
+
+    for(unsigned int i = 0; i < FONTSET_SIZE; i++) {
+        memory[i] = 0;
+    }
 
     for(unsigned int i = 0; i < FONTSET_SIZE; i++) {
         memory[FONTSET_START_ADDRESS + i] = font[i];
+    }
+
+    for(int i = 0; i < 16; i++) {
+        this->registers[i] = 0;
+        this->stack[i] = 0;
+        this->keypad[i] = 0;
+    }
+
+    for(int i = 0; i < (64 * 32); i++) {
+        this->video[i] = 0;
     }
 
     randByte = std::uniform_int_distribution<uint8_t>(0, 255U);
