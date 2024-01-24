@@ -7,7 +7,8 @@
 #include <chrono>
 #include <random>
 
-#include "/opt/homebrew/include/SDL2/SDL.h"
+#include <SDL2/SDL.h>
+#include <boost/log/trivial.hpp>
 
 class Chip8 {
 public:
@@ -15,7 +16,7 @@ public:
     
     bool loadROM(const std::string& romFilename);
     
-    uint16_t fetch();
+    //uint16_t fetch();
     void decodeAndExecute(uint16_t opcode);
     //void execute();
 

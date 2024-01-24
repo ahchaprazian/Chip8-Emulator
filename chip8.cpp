@@ -39,12 +39,15 @@ Chip8::Chip8() : randGen(std::chrono::system_clock::now().time_since_epoch().cou
     }
 
     randByte = std::uniform_int_distribution<uint8_t>(0, 255U);
+
+    BOOST_LOG_TRIVIAL(info) << "Succesfully constructed Chip8 Object.";
 }
 
 bool Chip8::loadROM(const std::string& romFilename){
     std::ifstream romFile(romFilename, std::ios::binary | std::ios::ate);
 
     if(!romFile.is_open()){
+        BOOST_LOG_TRIVIAL(error) << "Failed to load ROM.";
         return false;
     }
 
@@ -60,5 +63,57 @@ bool Chip8::loadROM(const std::string& romFilename){
     }
 
     delete[] buffer;
+
+
+    BOOST_LOG_TRIVIAL(info) << "ROM has successfully loaded.";
+    return true;
+}
+
+void Chip8::decodeAndExecute(uint16_t opcode) {
+
+    uint8_t instructionType = (opcode & 0xF000) >> 12; // 0xN000 -< 1st nibble which is the instruction type
+    uint8_t registerVX = (opcode & 0x0F00) >> 8;      // 0x0X00 <- 2nd nibble one of 16 registers from V0-VF
+    uint8_t registerVY = (opcode & 0x00F0) >> 4;      // 0x00Y0 <- 3rd nibble one of 16 registers from V0-VF
+    uint8_t N = opcode & 0x000F;               // 0x000N <- 4 bit number (4th nibble)
+    uint8_t NN = opcode & 0x00FF;              // 0x00NN <- 8 bit immidate number (3rd and 4th nibbles)
+    uint16_t NNN = opcode & 0x0FFF;            // 0x0NNN <- 12 bit immediate memory address (2nd, 3rd, and 4th nibbles)
+
+
+    switch(instructionType) {
+        case 0x0:
+            break;
+        case 0x1:
+            break;
+        case 0x2:
+            break;
+        case 0x3:
+            break;
+        case 0x4:
+            break;
+        case 0x5:
+            break;
+        case 0x6:
+            break;
+        case 0x7:
+            break;
+        case 0x8:
+            break;
+        case 0x9:
+            break;
+        case 0xA:
+            break;
+        case 0xB:
+            break;
+        case 0xC:
+            break;
+        case 0xD:
+            break;
+        case 0xE:
+            break;
+        case 0xF:
+            break;
+        default:
+            break;
+    }
 }
 
