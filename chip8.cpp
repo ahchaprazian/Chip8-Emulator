@@ -316,27 +316,27 @@ void Chip8::decodeAndExecute() {
                 programCounter += 2;
             }
             if(NN == 0x0033) {
-                memory[index] = (uint8_t) ((uint8_t) registers[registerVX] / 100);
-                memory[index + 1] = (uint8_t) ((uint8_t) (registers[registerVX] / 10) % 10);
-                memory[index + 2] = (uint8_t) ((uint8_t) (registers[registerVX]  % 100) % 10);
+                memory[index] = (registers[registerVX] / 100);
+                memory[index + 1] = ((registers[registerVX] / 10) % 10);
+                memory[index + 2] = ((registers[registerVX]  % 100) % 10);
                 programCounter += 2;
             }
             if(NN == 0x0055) {
                 BOOST_LOG_TRIVIAL(info) << "Entered opcode FX55";
-                for (uint8_t i = 0; i < registerVX; ++i) {
+                for (uint8_t i = 0; i <= registerVX; ++i) {
                     memory[index + i] = registers[i];
                 }
                 BOOST_LOG_TRIVIAL(info) << "Completed FX55";
                 index += registerVX + 1;
-                index = (uint16_t) index;
+                //index = (uint16_t) index;
                 programCounter += 2;
             }
             if(NN == 0x0065) {
-                for (uint8_t i = 0; i < registerVX; i++) {
+                for (uint8_t i = 0; i <= registerVX; i++) {
                     registers[i] = memory[index + i];
                 }
                 index += registerVX + 1;
-                index = (uint16_t) index;
+                //index = (uint16_t) index;
                 programCounter += 2;
             }
             break;
