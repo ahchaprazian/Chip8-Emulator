@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
         chip8Emulator.decodeAndExecute();
 
         for(int i = 0; i < 2048; i++) {
-            uint32_t pixel = chip8Emulator.get_grapich(i);
+            uint32_t pixel = chip8Emulator.get_graphic(i);
             pixels[i] = (0x00FFFFFF * pixel) | 0xFF000000;
         }
 

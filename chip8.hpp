@@ -15,9 +15,7 @@ public:
     
     bool loadROM(const std::string& romFilename);
 
-    uint32_t get_grapich(int i) {
-        return video[i];
-    }
+    uint32_t get_graphic(int i);
     
     //uint16_t fetch();
     void decodeAndExecute();

@@ -87,6 +87,10 @@ bool Chip8::loadROM(const std::string& romFilename){
     return true;
 }
 
+uint32_t Chip8::get_graphic(int i) {
+    return video[i];
+}
+
 void Chip8::set_key(int i, int keyPressedEvent) {
 
 }
