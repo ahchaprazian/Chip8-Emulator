@@ -2,26 +2,27 @@
 #define CHIP8_HPP
 
 #include <stdint.h>
-#include <stack>
-#include <string>
 #include <chrono>
 #include <random>
-
 #include <SDL2/SDL.h>
 #include <boost/log/trivial.hpp>
 
 class Chip8 {
 public:
     Chip8();
+
+    void set_key(int i, int keyPressedEvent);
     
     bool loadROM(const std::string& romFilename);
+
+    uint32_t get_graphic(int i);
     
     //uint16_t fetch();
-    void decodeAndExecute(uint16_t opcode);
+    void decodeAndExecute();
     //void execute();
 
 private:
-    uint8_t registers[16] {};
+    uint8_t registers[16] {};   // V register V0-VF
     uint8_t memory[4096] {};
     uint16_t index{};           // Index register
     uint16_t programCounter {};             // program counter

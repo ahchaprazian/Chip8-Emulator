@@ -73,6 +73,30 @@ int main(int argc, char* argv[]) {
         std::exit(EXIT_FAILURE);
     }
 
+    SDL_Event event;
+    bool quit = false;
+    uint32_t pixels[2048];
+    while(!quit) {
+        while(SDL_PollEvent(&event)) {
+            if(event.type == SDL_QUIT) {
+                quit = true;
+            }
+        }
+
+        chip8Emulator.decodeAndExecute();
+
+        for(int i = 0; i < 2048; i++) {
+            uint32_t pixel = chip8Emulator.get_graphic(i);
+            pixels[i] = (0x00FFFFFF * pixel) | 0xFF000000;
+        }
+
+        SDL_UpdateTexture(texture, NULL, pixels, 64 * sizeof(Uint32));
+
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, texture, NULL, NULL);
+        SDL_RenderPresent(renderer);
+    }
+
     // if (renderer == nullptr) {
     //     SDL_Log("Failed to create renderer: %s", SDL_GetError());
     //     return 1;
