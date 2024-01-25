@@ -106,22 +106,22 @@ void Chip8::decodeAndExecute() {
     uint8_t NN = opcode & 0x00FF;              // 0x00NN <- 8 bit immidate number (3rd and 4th nibbles)
     uint16_t NNN = opcode & 0x0FFF;            // 0x0NNN <- 12 bit immediate memory address (2nd, 3rd, and 4th nibbles)
 
-    unsigned short x;
-    unsigned short y;
-    unsigned short height;
+    uint8_t x;
+    uint8_t y;
+    uint8_t height;
+    bool isPressed;
 
     switch(instructionType) {
         case 0x0:
             if(opcode == 0x00E0) {
                 memset(video, 0, sizeof(video));
-                programCounter += 2;
                 BOOST_LOG_TRIVIAL(info) << "Screen Cleared";
             }
             if(opcode == 0X00EE) {
                 stackPointer--;
                 programCounter = stack[stackPointer];
-                programCounter += 2;
             }
+            programCounter += 2;
             break;
         case 0x1:
             programCounter = NNN;
@@ -161,69 +161,45 @@ void Chip8::decodeAndExecute() {
             BOOST_LOG_TRIVIAL(info) << "Added NN to VX";
             break;
         case 0x8:
-            if(N == 0x0000) {
-                registers[registerVX] = registers[registerVY];
-                programCounter += 2;
+            switch (N) {
+                case 0x0000:
+                    registers[registerVX] = registers[registerVY];
+                    break;
+                case 0x0001:
+                    registers[registerVX] |= registers[registerVY];
+                    break;
+                case 0x0002:
+                    registers[registerVX] &= registers[registerVY];
+                    break;
+                case 0x0003:
+                    registers[registerVX] ^= registers[registerVY];
+                    break;
+                case 0x0004:
+                    registers[registerVX] += registers[registerVY];
+                    registers[0xF] = (registers[registerVX] < registers[registerVY]) ? 1 : 0;
+                    break;
+                case 0x0005:
+                    registers[0xF] = (registers[registerVX] > registers[registerVY]) ? 1 : 0;
+                    registers[registerVX] -= registers[registerVY];
+                    break;
+                case 0x0006:
+                    registers[0xF] = registers[registerVX] & 1;
+                    registers[registerVX] >>= 1;
+                    break;
+                case 0x0007:
+                    registers[0xF] = (registers[registerVX] < registers[registerVY]) ? 1 : 0;
+                    registers[registerVX] = registers[registerVY] - registers[registerVX];
+                    break;
+                case 0x000E:
+                    registers[0xF] = (registers[registerVX] >> 7) & 1;
+                    registers[registerVX] <<= 1;
+                    break;
+                default:
+                    // Handle unknown N values or add logging.
+                    break;
             }
-            if(N == 0x0001) {
-                registers[registerVX] = registers[registerVX] | registers[registerVY];
-                programCounter += 2;
-            }
-            if(N == 0x0002) {
-                registers[registerVX] = registers[registerVX] & registers[registerVY];
-                programCounter += 2;
-            }
-            if(N == 0x0003) {
-                registers[registerVX] = registers[registerVX] ^ registers[registerVY];
-                programCounter += 2;
-            }
-            if(N == 0x0004) {
-                registers[registerVX] += registers[registerVY];
 
-                uint8_t overflow = 0xFF - registers[registerVX];
-
-                if(registers[registerVY] > overflow) {
-                    registers[0xF] = 1;
-                } else {
-                    registers[0xF] = 0;
-                }
-                programCounter += 2;
-            }
-            if(N == 0x0005) {
-                if(registers[registerVX] > registers[registerVY]) {
-                    registers[0xF] = 1;
-                } else {
-                    registers[0xF] = 0;
-                }
-                registers[registerVX] -= registers[registerVY];
-                programCounter += 2;
-            }
-            if(N == 0x0006) {
-                registers[registerVX] = registers[registerVY];
-                bool bit = registers[registerVX] & 1;
-                registers[registerVX] >>= 1;
-
-                if(bit) {
-                    registers[0xF] = 1;
-                } else {
-                    registers[0xF] = 0;
-                }
-                programCounter += 2;
-            }
-            if(N == 0x0007) {
-                if(registers[registerVX] < registers[registerVY]) {
-                    registers[0xF] = 1;
-                } else {
-                    registers[0xF] = 0;
-                }
-                registers[registerVX] = registers[registerVY] - registers[registerVX];
-                programCounter += 2;
-            }
-            if(N == 0x000E) {
-                registers[0xF] = registers[registerVX] >> 7;
-                registers[registerVX] <<= 1;
-                programCounter += 2;
-            }
+            programCounter += 2;
             break;
         case 0x9:
             if(registers[registerVX] != registers[registerVY]) {
@@ -243,102 +219,104 @@ void Chip8::decodeAndExecute() {
             programCounter += 2;
             break;
         case 0xD:
-            unsigned short pixel;
+            uint8_t pixel;
             x = registers[registerVX] % 64;
             y = registers[registerVY] % 32;
             height = N;
 
             registers[0xF] = 0;
-            for(int yAxis = 0; yAxis < height; yAxis++){
-                pixel = memory[index + yAxis];
-                for (int xAxis = 0; xAxis < 8; xAxis++) {
-                    if((pixel & (0x80 >> xAxis)) != 0) {
-                        if(video[(x + xAxis + ((y + yAxis) *64))] == 1) {
-                            video[0xF] = 1;
-                        }
-                        video[x+xAxis + ((y + yAxis) * 64)] ^= 1;
-                    }
+            for (int i = 0; i < height * 8; i++) {
+                int yAxis = i / 8;
+                int xAxis = i % 8;
+
+                int pixelIndex = index + yAxis;
+                int videoIndex = x + xAxis + (y + yAxis) * 64;
+                
+                pixel = memory[pixelIndex];
+                int videoPixel = video[videoIndex];
+
+                if ((pixel & (0x80 >> xAxis)) != 0 && videoPixel == 1) {
+                    video[0xF] = 1;
                 }
+
+                video[videoIndex] ^= (pixel & (0x80 >> xAxis)) != 0;
             }
+
             programCounter += 2;
             BOOST_LOG_TRIVIAL(info) << "Coordinates Drawn";
             break;
         case 0xE:
-            if(NN == 0x009E) {
-                if (keypad[registers[registerVX]] != 0) {
-                    programCounter += 2;
-                } 
-                programCounter += 2;
+            switch(NN) {
+                case 0x009E:
+                    if (keypad[registers[registerVX]] != 0) {
+                        programCounter += 2;
+                    }
+                    break;
+                case 0x00A1:
+                    if (keypad[registers[registerVX]] == 0) {
+                        programCounter += 2;
+                    }
+                    break;
+                default:
+                    break;
             }
-            if(NN == 0x00A1) {
-                if (keypad[registers[registerVX]] == 0) {
-                    programCounter += 2;
-                }
-                programCounter += 2;
-            }
+            programCounter += 2;
             break;
         case 0xF:
             BOOST_LOG_TRIVIAL(info) << "Entered 0xF";
-            if(N == 0x0007) {
-                registers[registerVX] = delayTimer;
-                programCounter += 2;
-            }
-            if(NN == 0x0015) {
-                delayTimer = registers[registerVX];
-                programCounter += 2;
-            }
-            if(NN == 0x0018) {
-                soundTimer = registers[registerVX];
-                programCounter += 2;
-            }
-            if(NN == 0x001E) {
-                index += registers[registerVX];
-                programCounter += 2;
-            }
-            if(NN == 0x000A) {
-                bool isPressed = false;
+            switch (NN) {
+                case 0x0007:
+                    registers[registerVX] = delayTimer;
+                    break;
+                case 0x0015:
+                    delayTimer = registers[registerVX];
+                    break;
+                case 0x0018:
+                    soundTimer = registers[registerVX];
+                    break;
+                case 0x001E:
+                    index += registers[registerVX];
+                    break;
+                case 0x000A:
+                    isPressed = false;
 
-                for (int i = 0; i < 16; i++) {
-                    if(keypad[i] != 0) {
-                        registers[registerVX] = i;
-                        isPressed = true;
+                    for (int i = 0; i < 16; i++) {
+                        if(keypad[i] != 0) {
+                            registers[registerVX] = i;
+                            isPressed = true;
+                        }
                     }
-                }
 
-                if(!isPressed) {
-                    return;
-                }
-
-                programCounter += 2;
+                    if(!isPressed) {
+                        return;
+                    }
+                    break;
+                case 0x0029:
+                    index = registers[registerVX] * 0x5;
+                    break;
+                case 0x0033:
+                    memory[index] = (uint8_t) (registers[registerVX] / 100);
+                    memory[index + 1] = (uint8_t) ((registers[registerVX] / 10) % 10);
+                    memory[index + 2] = (uint8_t) ((registers[registerVX]  % 100) % 10);
+                    break;
+                case 0x0055:
+                    BOOST_LOG_TRIVIAL(info) << "Entered opcode FX55";
+                    for (uint8_t i = 0; i <= registerVX; ++i) {
+                        memory[index + i] = registers[i];
+                    }
+                    BOOST_LOG_TRIVIAL(info) << "Completed FX55";
+                    index += registerVX + 1;
+                    break;
+                case 0x0065:
+                    for (uint8_t i = 0; i <= registerVX; i++) {
+                        registers[i] = memory[index + i];
+                    }
+                    index += registerVX + 1;
+                    break;
+                default:
+                    break;
             }
-            if(NN == 0x0029) {
-                index = registers[registerVX] * 0x5;
-                programCounter += 2;
-            }
-            if(NN == 0x0033) {
-                memory[index] = (registers[registerVX] / 100);
-                memory[index + 1] = ((registers[registerVX] / 10) % 10);
-                memory[index + 2] = ((registers[registerVX]  % 100) % 10);
-                programCounter += 2;
-            }
-            if(NN == 0x0055) {
-                BOOST_LOG_TRIVIAL(info) << "Entered opcode FX55";
-                for (uint8_t i = 0; i <= registerVX; ++i) {
-                    memory[index + i] = registers[i];
-                }
-                BOOST_LOG_TRIVIAL(info) << "Completed FX55";
-                index += registerVX + 1;
-                //index = (uint16_t) index;
-                programCounter += 2;
-            }
-            if(NN == 0x0065) {
-                for (uint8_t i = 0; i <= registerVX; i++) {
-                    registers[i] = memory[index + i];
-                }
-                index += registerVX + 1;
-                //index = (uint16_t) index;
-                programCounter += 2;
-            }
+            programCounter += 2;
             break;
         default:
             break;
