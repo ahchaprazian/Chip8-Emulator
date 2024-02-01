@@ -3,8 +3,17 @@
 #include <boost/log/trivial.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
+#include <chrono>
+#include <thread>
 #include "chip8.hpp"
 
+
+uint8_t keyboard[16] = {
+    SDLK_x, SDLK_1, SDLK_2, SDLK_3,
+    SDLK_q, SDLK_w, SDLK_e, SDLK_a,
+    SDLK_s, SDLK_d, SDLK_z, SDLK_c,
+    SDLK_4, SDLK_r, SDLK_f, SDLK_v
+};
 
 int main(int argc, char* argv[]) {
 
@@ -81,56 +90,46 @@ int main(int argc, char* argv[]) {
             if(event.type == SDL_QUIT) {
                 quit = true;
             }
+
+            if(event.type == SDL_KEYDOWN){
+                for(int i = 0; i < 16; i++) {
+                    if(event.key.keysym.sym == keyboard[i]) {
+                        chip8Emulator.set_key(i, 1);
+                        //std::cout << "SDL Keycode: " << event.key.keysym.sym << std::endl;
+
+                        //std::cout << "Key pressed: " << i << std::endl;
+                    }
+                }
+            } 
+            if(event.type == SDL_KEYUP) {
+                for(int i = 0; i < 16; i++) {
+                    if(event.key.keysym.sym == keyboard[i]) {
+                        chip8Emulator.set_key(i, 0);
+                        //std::cout << "Key pressed: " << i << std::endl;
+                    }
+                }
+            }
         }
 
         chip8Emulator.decodeAndExecute();
+        //chip8Emulator.getDraw();
+        if (chip8Emulator.getDraw()) {
+            chip8Emulator.setDraw(false);
+            for(int i = 0; i < 2048; i++) {
+                uint32_t pixel = chip8Emulator.get_graphic(i);
+                pixels[i] = (0x00FFFFFF * pixel) | 0xFF000000;
+            }
 
-        for(int i = 0; i < 2048; i++) {
-            uint32_t pixel = chip8Emulator.get_graphic(i);
-            pixels[i] = (0x00FFFFFF * pixel) | 0xFF000000;
+            SDL_UpdateTexture(texture, NULL, pixels, 64 * sizeof(Uint32));
+
+            SDL_RenderClear(renderer);
+            SDL_RenderCopy(renderer, texture, NULL, NULL);
+            SDL_RenderPresent(renderer);
         }
 
-        SDL_UpdateTexture(texture, NULL, pixels, 64 * sizeof(Uint32));
-
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
-        SDL_RenderPresent(renderer);
+        std::this_thread::sleep_for(std::chrono::microseconds(1200));
+        //SDL_Delay(10);
     }
-
-    // if (renderer == nullptr) {
-    //     SDL_Log("Failed to create renderer: %s", SDL_GetError());
-    //     return 1;
-    // }
-
-    // bool quit = false;
-    // SDL_Event event;
-
-    // int colorIndex = 0;
-    // const SDL_Color colors[] = {
-    //     {255, 0, 0, 255},   // Red
-    //     {0, 255, 0, 255},   // Green
-    //     {0, 0, 255, 255},   // Blue
-    //     {255, 255, 0, 255}, // Yellow
-    // };
-
-    // while (!quit) {
-    //     while (SDL_PollEvent(&event)) {
-    //         if (event.type == SDL_QUIT) {
-    //             quit = true;
-    //         }
-    //     }
-
-    //     // Clear the renderer with the current color
-    //     SDL_SetRenderDrawColor(renderer, colors[colorIndex].r, colors[colorIndex].g, colors[colorIndex].b, colors[colorIndex].a);
-    //     SDL_RenderClear(renderer);
-    //     SDL_RenderPresent(renderer);
-
-    //     // Cycle through colors
-    //     colorIndex = (colorIndex + 1) % (sizeof(colors) / sizeof(colors[0]));
-
-    //     // Add a short delay
-    //     SDL_Delay(1000);
-    // }
 
     // Clean up and quit
     SDL_DestroyRenderer(renderer);

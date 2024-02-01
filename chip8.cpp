@@ -58,14 +58,25 @@ Chip8::Chip8() : randGen(std::chrono::system_clock::now().time_since_epoch().cou
 
     this->randByte = std::uniform_int_distribution<uint8_t>(0, 255U);
 
-    BOOST_LOG_TRIVIAL(info) << "Succesfully constructed Chip8 Object.";
+    this->draw = false;
+
+    //BOOST_LOG_TRIVIAL(info) << "Succesfully constructed Chip8 Object.";
+}
+
+
+bool Chip8::getDraw() {
+    return draw;
+}
+
+void Chip8::setDraw(bool drawPixel) {
+    draw = drawPixel;
 }
 
 bool Chip8::loadROM(const std::string& romFilename){
     std::ifstream romFile(romFilename, std::ios::binary | std::ios::ate);
 
     if(!romFile.is_open()){
-        BOOST_LOG_TRIVIAL(error) << "Failed to load ROM.";
+        //BOOST_LOG_TRIVIAL(error) << "Failed to load ROM.";
         return false;
     }
 
@@ -83,7 +94,7 @@ bool Chip8::loadROM(const std::string& romFilename){
     delete[] buffer;
 
 
-    BOOST_LOG_TRIVIAL(info) << "ROM has successfully loaded.";
+    //BOOST_LOG_TRIVIAL(info) << "ROM has successfully loaded.";
     return true;
 }
 
@@ -92,7 +103,7 @@ uint32_t Chip8::get_graphic(int i) {
 }
 
 void Chip8::set_key(int i, int keyPressedEvent) {
-
+    keypad[i] = keyPressedEvent;
 }
 
 void Chip8::decodeAndExecute() {
@@ -113,11 +124,12 @@ void Chip8::decodeAndExecute() {
 
     switch(instructionType) {
         case 0x0:
-            if(opcode == 0x00E0) {
+            if(NN == 0x00E0) {
                 memset(video, 0, sizeof(video));
-                BOOST_LOG_TRIVIAL(info) << "Screen Cleared";
+                //BOOST_LOG_TRIVIAL(info) << "Screen Cleared";
+                draw = true;
             }
-            if(opcode == 0X00EE) {
+            if(NN == 0x00EE) {
                 stackPointer--;
                 programCounter = stack[stackPointer];
             }
@@ -125,7 +137,7 @@ void Chip8::decodeAndExecute() {
             break;
         case 0x1:
             programCounter = NNN;
-            BOOST_LOG_TRIVIAL(info) << "Jumped to address NNN";
+            //BOOST_LOG_TRIVIAL(info) << "Jumped to address NNN";
             break;
         case 0x2:
             stack[stackPointer] = programCounter;
@@ -153,12 +165,12 @@ void Chip8::decodeAndExecute() {
         case 0x6:
             registers[registerVX] = NN;
             programCounter += 2;
-            BOOST_LOG_TRIVIAL(info) << "Set VX = NN";
+            //BOOST_LOG_TRIVIAL(info) << "Set VX = NN";
             break;
         case 0x7:
             registers[registerVX] += NN;
             programCounter += 2;
-            BOOST_LOG_TRIVIAL(info) << "Added NN to VX";
+            //BOOST_LOG_TRIVIAL(info) << "Added NN to VX";
             break;
         case 0x8:
             switch (N) {
@@ -220,30 +232,25 @@ void Chip8::decodeAndExecute() {
             break;
         case 0xD:
             uint8_t pixel;
-            x = registers[registerVX] % 64;
-            y = registers[registerVY] % 32;
+            x = registers[registerVX];
+            y = registers[registerVY];
             height = N;
 
             registers[0xF] = 0;
-            for (int i = 0; i < height * 8; i++) {
-                int yAxis = i / 8;
-                int xAxis = i % 8;
-
-                int pixelIndex = index + yAxis;
-                int videoIndex = x + xAxis + (y + yAxis) * 64;
-                
-                pixel = memory[pixelIndex];
-                int videoPixel = video[videoIndex];
-
-                if ((pixel & (0x80 >> xAxis)) != 0 && videoPixel == 1) {
-                    video[0xF] = 1;
+            for(int yline = 0; yline < height; yline++) {
+                pixel = memory[index + yline];
+                for(int xline = 0; xline < 8; xline++) {
+                    if((pixel & (0x80 >> xline)) != 0) {
+                        if(video[(x + xline + ((y + yline) * 64))] == 1) {
+                            registers[0xF] = 1;
+                        }
+                        video[(x + xline + ((y + yline) * 64))] ^= 1;
+                    }
                 }
-
-                video[videoIndex] ^= (pixel & (0x80 >> xAxis)) != 0;
             }
-
+            draw = true;
             programCounter += 2;
-            BOOST_LOG_TRIVIAL(info) << "Coordinates Drawn";
+            //BOOST_LOG_TRIVIAL(info) << "Coordinates Drawn";
             break;
         case 0xE:
             switch(NN) {
@@ -263,7 +270,7 @@ void Chip8::decodeAndExecute() {
             programCounter += 2;
             break;
         case 0xF:
-            BOOST_LOG_TRIVIAL(info) << "Entered 0xF";
+            //BOOST_LOG_TRIVIAL(info) << "Entered 0xF";
             switch (NN) {
                 case 0x0007:
                     registers[registerVX] = delayTimer;
@@ -300,11 +307,11 @@ void Chip8::decodeAndExecute() {
                     memory[index + 2] = (uint8_t) ((registers[registerVX]  % 100) % 10);
                     break;
                 case 0x0055:
-                    BOOST_LOG_TRIVIAL(info) << "Entered opcode FX55";
+                    //BOOST_LOG_TRIVIAL(info) << "Entered opcode FX55";
                     for (uint8_t i = 0; i <= registerVX; ++i) {
                         memory[index + i] = registers[i];
                     }
-                    BOOST_LOG_TRIVIAL(info) << "Completed FX55";
+                    //BOOST_LOG_TRIVIAL(info) << "Completed FX55";
                     index += registerVX + 1;
                     break;
                 case 0x0065:
@@ -321,5 +328,10 @@ void Chip8::decodeAndExecute() {
         default:
             break;
     }
+    
+    if(delayTimer > 0) {
+        --delayTimer;
+    }
+    if(soundTimer > 0) 
+        --soundTimer;
 }
-
