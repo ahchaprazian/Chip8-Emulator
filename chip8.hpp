@@ -5,7 +5,7 @@
 #include <chrono>
 #include <random>
 #include <SDL2/SDL.h>
-#include <boost/log/trivial.hpp>
+//#include <boost/log/trivial.hpp>
 
 class Chip8 {
 public:
