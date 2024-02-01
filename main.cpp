@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <boost/log/trivial.hpp>
+//#include <boost/log/trivial.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <chrono>
@@ -19,11 +19,11 @@ int main(int argc, char* argv[]) {
 
     if(argv[1] == NULL) {   // check if a rom was insterted if not print error and exit
         std::cerr << "ERROR: ROM file was not inserted.\n";
-        BOOST_LOG_TRIVIAL(error) << "No ROM file was inserted.";
+        //BOOST_LOG_TRIVIAL(error) << "No ROM file was inserted.";
         std::exit(EXIT_FAILURE);
     }
 
-    BOOST_LOG_TRIVIAL(info) << "Correct number of arguments passed in.";
+    //BOOST_LOG_TRIVIAL(info) << "Correct number of arguments passed in.";
 
     Chip8 chip8Emulator = Chip8();
 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
-    const int height = 320, width = 640;
+    const int height = 520, width = 1080;
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
