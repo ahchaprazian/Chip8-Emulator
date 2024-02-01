@@ -16,10 +16,15 @@ public:
     bool loadROM(const std::string& romFilename);
 
     uint32_t get_graphic(int i);
+    bool getDraw();
+    void setDraw(bool draw);
     
     //uint16_t fetch();
     void decodeAndExecute();
     //void execute();
+
+   
+    
 
 private:
     uint8_t registers[16] {};   // V register V0-VF
@@ -36,6 +41,8 @@ private:
 
     std::default_random_engine randGen;
     std::uniform_int_distribution<uint8_t> randByte;
+
+    bool draw;
 };  
 
 #endif
